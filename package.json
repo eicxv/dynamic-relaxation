@@ -1,0 +1,37 @@
+{
+  "name": "dynamic-relaxation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "webpack --watch",
+    "start": "webpack-dev-server --open",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eicxv/dynamic-relaxation.git"
+  },
+  "author": "Einar Persson",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/eicxv/dynamic-relaxation/issues"
+  },
+  "homepage": "https://github.com/eicxv/dynamic-relaxation#readme",
+  "dependencies": {
+    "lodash.throttle": "^4.1.1",
+    "mathjs": "^7.3.0",
+    "three": "^0.121.1"
+  },
+  "devDependencies": {
+    "css-loader": "^4.2.1",
+    "html-webpack-plugin": "^4.3.0",
+    "path": "^0.12.7",
+    "source-map-loader": "^1.0.2",
+    "style-loader": "^1.2.1",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
+  }
+}
