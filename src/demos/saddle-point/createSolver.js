@@ -1,7 +1,7 @@
-import Solver from "./solver";
-import { AnchorGoal, ForceGoal, BarGoal } from "./goals";
+import Solver from "../../dynamic-relaxation/solver";
+import { AnchorGoal, ForceGoal, BarGoal } from "../../dynamic-relaxation/goals";
 
-export function createSolver() {
+export default function createSolver() {
   let vertices = [];
   let goals = [];
   const size = 11;
@@ -58,5 +58,5 @@ export function createSolver() {
   const solver = new Solver(vertices, 1e-1);
   solver.addGoals(goals);
 
-  return [solver, vertices];
+  return solver;
 }

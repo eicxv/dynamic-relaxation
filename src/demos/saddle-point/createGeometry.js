@@ -1,28 +1,6 @@
-import Viewport from "../viewport/viewport";
 import * as THREE from "three";
 
-export function createViewport() {
-  const container = document.getElementById("viewport");
-  const viewport = new Viewport(container);
-  const scene = viewport.getScene();
-  return [viewport, scene];
-}
-
-export function initPoints(scene, vertices) {
-  const geometry = new THREE.BufferGeometry();
-  vertices = new Float32Array(vertices.flat());
-  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-  const material = new THREE.PointsMaterial({
-    color: 0xaa5555,
-    sizeAttenuation: false,
-    size: 10,
-  });
-  let sceneObj = new THREE.Points(geometry, material);
-  scene.add(sceneObj);
-  return sceneObj;
-}
-
-export function initLines(scene, vertices) {
+export default function createGeometry(scene, vertices) {
   const geometry = new THREE.BufferGeometry();
   let size = Math.round(Math.sqrt(vertices.length));
   vertices = new Float32Array(vertices.flat());
@@ -32,9 +10,16 @@ export function initLines(scene, vertices) {
   const material = new THREE.LineBasicMaterial({
     color: 0xaa4444,
   });
-  let sceneObj = new THREE.LineSegments(geometry, material);
-  scene.add(sceneObj);
-  return sceneObj;
+  let lines = new THREE.LineSegments(geometry, material);
+  scene.add(lines);
+
+  function updateGeometry(vertices) {
+    let position = lines.geometry.getAttribute("position");
+    position.array = new Float32Array(vertices.flat());
+    position.needsUpdate = true;
+  }
+
+  return updateGeometry;
 }
 
 function generateLineGridIndices(rows, cols) {
@@ -67,10 +52,4 @@ function generateLineGridIndices(rows, cols) {
     }
   }
   return indices;
-}
-
-export function updateGeometry(sceneObj, vertices) {
-  let position = sceneObj.geometry.getAttribute("position");
-  position.array = new Float32Array(vertices.flat());
-  position.needsUpdate = true;
 }
