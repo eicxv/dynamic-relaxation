@@ -1,13 +1,15 @@
 import Viewport from "../../viewport/viewport";
 import createGeometry from "./createGeometry";
 import createSolver from "./createSolver";
+import createGui from "./createGui";
 
 export default function main() {
   const container = document.getElementById("viewport");
   const viewport = new Viewport(container);
   const scene = viewport.getScene();
   const solver = createSolver();
-  let updateGeometry = createGeometry(scene, solver.vertices);
+  let vertices = solver.vertices;
+  let updateGeometry = createGeometry(scene, vertices);
   solver.onVerticesChange(updateGeometry);
   solver.startSimulation();
 
@@ -16,4 +18,5 @@ export default function main() {
     requestAnimationFrame(update);
   }
   update();
+  createGui(solver, vertices, updateGeometry);
 }

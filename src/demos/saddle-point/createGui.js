@@ -1,21 +1,25 @@
-function createGui(solver, startVertices, sceneObj) {
+import dat from "three/examples/jsm/libs/dat.gui.module";
+
+export default function createGui(solver, startVertices, updateGeometry) {
   function resetVertices() {
     solver.vertices = startVertices;
     solver.velocities = startVertices.map(() => [0, 0, 0]);
     solver.energy.pop();
     solver.energy.unshift(0);
     solver.iterationCount = 0;
-    updateGeometry(sceneObj, startVertices);
+    updateGeometry(startVertices);
   }
 
   class GuiObj {
-    reset = () => {
-      resetVertices();
-      if (this.run) {
-        solver.resumeSimulation();
-      }
-    };
-    run = true;
+    constructor() {
+      this.run = true;
+      this.reset = () => {
+        resetVertices();
+        if (this.run) {
+          solver.resumeSimulation();
+        }
+      };
+    }
   }
   const guiObj = new GuiObj();
 
