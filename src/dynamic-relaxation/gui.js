@@ -23,8 +23,7 @@ export default class Gui {
     this.run = true;
     let controller = guiFolder.add(this, "run");
     controller.onFinishChange((value) => {
-      console.log(value);
-      if (this.run) {
+      if (value) {
         this._solver.resumeSimulation();
       } else {
         this._solver.stopSimulation();
