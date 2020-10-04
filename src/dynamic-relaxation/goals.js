@@ -61,3 +61,101 @@ export class BarGoal extends BaseGoal {
     stiffnesses[this.vertexIndexB] += this.strength;
   }
 }
+
+export class SoapFilmGoal extends BaseGoal {
+  constructor(vertexIndexA, vertexIndexB, vertexIndexC, strength) {
+    super();
+    this.vertexIndexA = vertexIndexA;
+    this.vertexIndexB = vertexIndexB;
+    this.vertexIndexC = vertexIndexC;
+    this.strength = strength;
+  }
+
+  _calculateArea(p1, p2, p3) {
+    let p1p2 = math.subtract(p2, p1);
+    let p1p3 = math.subtract(p3, p1);
+    let crossProduct = math.cross(p1p2, p1p3);
+    let area = math.norm(crossProduct) / 2;
+    return area;
+  }
+
+  _applyForce(vertices, residuals, vertexIndexA, vertexIndexB, angle) {
+    let vectorAB = math.subtract(
+      vertices[vertexIndexB],
+      vertices[vertexIndexA]
+    );
+    let length = math.norm(vectorAB);
+    let sigma = this.strength;
+    let tension = (sigma * length) / (2 * math.tan(angle));
+    let r = math.dotMultiply(vectorAB, tension / length);
+    residuals[vertexIndexA] = math.add(residuals[vertexIndexA], r);
+    r = math.dotMultiply(r, -1);
+    residuals[vertexIndexB] = math.add(residuals[vertexIndexB], r);
+  }
+
+  _vectorAngle(a, b) {
+    let angle = math.acos(math.dot(a, b) / (math.norm(a) * math.norm(b)));
+    return angle;
+  }
+
+  calculate(vertices, residuals) {
+    let angle;
+    let v1;
+    let v2;
+
+    v1 = math.subtract(
+      vertices[this.vertexIndexC],
+      vertices[this.vertexIndexA]
+    );
+    v2 = math.subtract(
+      vertices[this.vertexIndexC],
+      vertices[this.vertexIndexB]
+    );
+    angle = this._vectorAngle(v1, v2);
+
+    this._applyForce(
+      vertices,
+      residuals,
+      this.vertexIndexA,
+      this.vertexIndexB,
+      angle
+    );
+    v1 = math.subtract(
+      vertices[this.vertexIndexA],
+      vertices[this.vertexIndexB]
+    );
+    v2 = math.subtract(
+      vertices[this.vertexIndexA],
+      vertices[this.vertexIndexC]
+    );
+    angle = this._vectorAngle(v1, v2);
+    this._applyForce(
+      vertices,
+      residuals,
+      this.vertexIndexB,
+      this.vertexIndexC,
+      angle
+    );
+    v1 = math.subtract(
+      vertices[this.vertexIndexB],
+      vertices[this.vertexIndexC]
+    );
+    v2 = math.subtract(
+      vertices[this.vertexIndexB],
+      vertices[this.vertexIndexA]
+    );
+    angle = this._vectorAngle(v1, v2);
+    this._applyForce(
+      vertices,
+      residuals,
+      this.vertexIndexC,
+      this.vertexIndexA,
+      angle
+    );
+  }
+  addStiffness(stiffnesses) {
+    stiffnesses[this.vertexIndexA] += this.strength * 50;
+    stiffnesses[this.vertexIndexB] += this.strength;
+    stiffnesses[this.vertexIndexC] += this.strength;
+  }
+}
