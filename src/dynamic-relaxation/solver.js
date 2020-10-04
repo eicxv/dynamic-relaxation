@@ -1,6 +1,13 @@
 import { math } from "./mathjs";
 import throttle from "lodash.throttle";
 
+export const Status = Object.freeze({
+  INITIALIZED: Symbol("initialized"),
+  RUNNING: Symbol("running"),
+  CONVERGED: Symbol("converged"),
+  STOPPED: Symbol("stopped"),
+});
+
 export default class Solver {
   constructor(vertices, terminationForce) {
     this.vertices = vertices;
@@ -11,7 +18,7 @@ export default class Solver {
     this.residuals = math.zeros(vertices.length, 3).toArray();
     this.energy = [0, 0, 0];
     this.mass = 1;
-    this.status = "initialized";
+    this.status = Status.INITIALIZED;
     this.iterationCount = 0;
 
     this._verticesUpdated = throttle(() => {
@@ -27,14 +34,14 @@ export default class Solver {
   }
 
   stopSimulation() {
-    this._setStatus("stopped");
+    this._setStatus(Status.STOPPED);
     clearTimeout(this.iterationId);
   }
 
   resumeSimulation() {
     this._setTimeStep();
-    if (this.status !== "running") {
-      this._setStatus("running");
+    if (this.status !== Status.RUNNING) {
+      this._setStatus(Status.RUNNING);
       this.iterationId = setTimeout(this._runIteration.bind(this), 0);
     }
   }
@@ -130,7 +137,7 @@ export default class Solver {
   _runIteration() {
     this._updateResiduals();
     if (this._checkTermination()) {
-      this._setStatus("converged");
+      this._setStatus(Status.CONVERGED);
       this._verticesUpdated();
       return;
     }

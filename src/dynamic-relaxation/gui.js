@@ -1,4 +1,5 @@
 import dat from "three/examples/jsm/libs/dat.gui.module";
+import { Status } from "./solver";
 
 export default class Gui {
   constructor(solver, updateGeometry) {
@@ -6,6 +7,7 @@ export default class Gui {
     this._solver = solver;
     this._startVertices = solver.vertices.slice();
     this._updateGeometry = updateGeometry;
+    this.status = this._solver.status.description;
 
     let solverFolder = this._gui.addFolder("Solver");
     solverFolder.open();
@@ -44,11 +46,10 @@ export default class Gui {
   }
 
   _addSolverStatus(guiFolder) {
-    let controller = guiFolder
-      .add(this._solver, "status")
-      .name("solver status");
+    let controller = guiFolder.add(this, "status").name("solver status");
     controller.domElement.style.pointerEvents = "none";
     this._solver.onStatusChange(() => {
+      this.status = this._solver.status.description;
       controller.updateDisplay();
     });
   }
@@ -64,7 +65,7 @@ export default class Gui {
   }
 
   resume() {
-    if (this.run && this._solver.status !== "running") {
+    if (this.run && this._solver.status !== Status.RUNNING) {
       this._solver.resumeSimulation();
     }
   }
