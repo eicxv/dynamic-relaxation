@@ -18,5 +18,5 @@ export default function main() {
     requestAnimationFrame(update);
   }
   update();
-  createGui(solver, vertices, updateGeometry);
+  createGui(solver, updateGeometry);
 }
