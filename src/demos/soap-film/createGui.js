@@ -17,9 +17,5 @@ export default function createGui(solver, updateGeometry) {
       anchor.position[2] = value;
     }
   });
-  controller.onFinishChange(() => {
-    if (gui.run) {
-      solver.resumeSimulation();
-    }
-  });
+  controller.onFinishChange(gui.resume.bind(gui));
 }

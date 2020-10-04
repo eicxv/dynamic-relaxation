@@ -33,7 +33,7 @@ export default class Gui {
   }
 
   _addResetButton(guiFolder) {
-    let controller = guiFolder.add(this, "_reset").name("reset");
+    guiFolder.add(this, "reset");
   }
 
   _addIterationCount(guiFolder) {
@@ -54,14 +54,18 @@ export default class Gui {
     });
   }
 
-  _reset() {
+  reset() {
     this._solver.vertices = this._startVertices;
     this._solver.velocities = this._startVertices.map(() => [0, 0, 0]);
     this._solver.energy.pop();
     this._solver.energy.unshift(0);
     this._solver.iterationCount = 0;
     this._updateGeometry(this._startVertices);
-    if (this.run) {
+    this.resume();
+  }
+
+  resume() {
+    if (this.run && this._solver.status !== "running") {
       this._solver.resumeSimulation();
     }
   }
