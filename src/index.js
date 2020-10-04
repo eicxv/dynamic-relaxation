@@ -1,4 +1,4 @@
-import main from "./demos/saddle-point/main";
+import main from "./demos/pendulum/main";
 import "./styles.css";
 
 main();
