@@ -1,4 +1,4 @@
-import main from "./demos/soap-film/main";
+import main from "./demos/bending-optimization/main";
 import "./styles.css";
 
 main();

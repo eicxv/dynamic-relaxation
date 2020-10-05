@@ -1,4 +1,4 @@
-import { math } from "./mathjs";
+import { math, angleBetweenVectors } from "./mathjs";
 
 class BaseGoal {}
 
@@ -59,6 +59,68 @@ export class BarGoal extends BaseGoal {
   addStiffness(stiffnesses) {
     stiffnesses[this.vertexIndexA] += this.strength;
     stiffnesses[this.vertexIndexB] += this.strength;
+  }
+}
+
+export class HingeGoal extends BaseGoal {
+  constructor(
+    vertexIndexEndA,
+    vertexIndexEndB,
+    vertexIndexMid,
+    restAngle,
+    strength
+  ) {
+    super();
+    this.vertexIndexEndA = vertexIndexEndA;
+    this.vertexIndexEndB = vertexIndexEndB;
+    this.vertexIndexMid = vertexIndexMid;
+    this.restAngle = restAngle;
+    this.strength = strength;
+  }
+
+  calculate(vertices, residuals) {
+    let vectorMidA = math.subtract(
+      vertices[this.vertexIndexEndA],
+      vertices[this.vertexIndexMid]
+    );
+    let vectorMidB = math.subtract(
+      vertices[this.vertexIndexEndB],
+      vertices[this.vertexIndexMid]
+    );
+    let angle = angleBetweenVectors(vectorMidA, vectorMidB);
+    let strain = angle - this.restAngle;
+    let perp = math.cross(vectorMidA, vectorMidB);
+
+    let forceA = math.cross(vectorMidA, perp);
+    forceA = math.dotMultiply(
+      forceA,
+      (this.strength * strain) / (math.norm(forceA) * math.norm(vectorMidA))
+    );
+    let forceB = math.cross(vectorMidB, perp);
+    forceB = math.dotMultiply(
+      forceB,
+      (this.strength * strain) / (math.norm(forceB) * math.norm(vectorMidB))
+    );
+
+    residuals[this.vertexIndexEndA] = math.subtract(
+      residuals[this.vertexIndexEndA],
+      forceA
+    );
+    residuals[this.vertexIndexEndB] = math.add(
+      residuals[this.vertexIndexEndB],
+      forceB
+    );
+    residuals[this.vertexIndexMid] = math
+      .chain(residuals[this.vertexIndexMid])
+      .add(forceA)
+      .subtract(forceB)
+      .done();
+  }
+
+  addStiffness(stiffnesses) {
+    stiffnesses[this.vertexIndexEndA] += 80 * this.strength;
+    stiffnesses[this.vertexIndexEndB] += 80 * this.strength;
+    stiffnesses[this.vertexIndexMid] += 80 * 2 * this.strength;
   }
 }
 
