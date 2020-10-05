@@ -1,4 +1,5 @@
 import { math, angleBetweenVectors } from "../../dynamic-relaxation/mathjs";
+import { Status } from "../../dynamic-relaxation/solver";
 
 export default class HingeOptimizer {
   constructor(solver, hingeGoals, barGoals, targetCurve) {
@@ -9,22 +10,25 @@ export default class HingeOptimizer {
     this.targetCurveUpdated();
     this.step = 1;
     this.angleTolerance = (2 * Math.PI) / 360;
+    this.status = "initialized";
+    // this._onConverge = this._onConverge.bind(this);
   }
 
   targetCurveUpdated() {
+    this.status = "curve updated";
     const n = this.solver.vertices.length;
     const curve = this.targetCurve.curve;
     let targetPoints = curve.getPoints(n - 1);
     targetPoints = targetPoints.map((v) => [v.x, v.y, v.z]);
-    this.updateTargetAngles(targetPoints);
-    this.updateLengths(targetPoints);
+    this._updateTargetAngles(targetPoints);
+    this._updateLengths(targetPoints);
   }
 
-  updateTargetAngles(targetPoints) {
-    this.targetAngles = this.getAngles(targetPoints);
+  _updateTargetAngles(targetPoints) {
+    this.targetAngles = this._getAngles(targetPoints);
   }
 
-  updateLengths(targetPoints) {
+  _updateLengths(targetPoints) {
     for (let i = 0; i < targetPoints.length - 1; i++) {
       let v = math.subtract(targetPoints[i], targetPoints[i + 1]);
       let length = math.norm(v);
@@ -32,7 +36,7 @@ export default class HingeOptimizer {
     }
   }
 
-  getAngles(points) {
+  _getAngles(points) {
     let angles = [];
     for (let i = 1; i < points.length - 1; i++) {
       let v1 = math.subtract(points[i - 1], points[i]);
@@ -42,11 +46,26 @@ export default class HingeOptimizer {
     return angles;
   }
 
-  optimize() {
+  _onConverge(status) {
+    if (status === Status.CONVERGED) {
+      this._optimize();
+    }
+  }
+
+  startOptimization() {
+    this.status = "running";
+    let onConverge = this._onConverge.bind(this);
+    this._onConvergeIdentifier = this.solver.onStatusChange(onConverge);
+    this._optimize();
+  }
+
+  _optimize() {
     let vertices = this.solver.vertices;
-    let currAngles = this.getAngles(vertices);
+    let currAngles = this._getAngles(vertices);
     let diffAngles = math.subtract(currAngles, this.targetAngles);
     if (math.max(diffAngles) < this.angleTolerance) {
+      this.status = "done";
+      this.solver.removeOnStatusChange(this._onConvergeIdentifier);
       return;
     }
     for (let i = 0; i < this.hingeGoals.length; i++) {

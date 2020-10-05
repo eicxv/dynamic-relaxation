@@ -1,5 +1,4 @@
 import Viewport from "../../viewport/viewport";
-import { Status } from "../../dynamic-relaxation/solver";
 import { HingeGoal, BarGoal } from "../../dynamic-relaxation/goals";
 import createGeometry from "./createGeometry";
 import createSolver from "./createSolver";
@@ -15,12 +14,6 @@ export default function main() {
   let vertices = solver.vertices;
   let updateGeometry = createGeometry(scene, vertices);
   solver.onVerticesChange(updateGeometry);
-  function onConverge(status) {
-    if (status === Status.CONVERGED) {
-      hingeOptimizer.optimize();
-    }
-  }
-  solver.onStatusChange(onConverge);
   solver.startSimulation();
 
   const curvePoints = [
@@ -46,5 +39,3 @@ export default function main() {
   update();
   createGui(solver, updateGeometry, hingeOptimizer);
 }
-
-// main();
