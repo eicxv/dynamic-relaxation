@@ -20,10 +20,12 @@ export default class Solver {
     this.mass = 1;
     this.status = Status.INITIALIZED;
     this.iterationCount = 0;
+    this._onVerticesChange = [];
+    this._onStatusChange = [];
 
     this._verticesUpdated = throttle(() => {
-      if (this._onVerticesChange) {
-        this._onVerticesChange(this.vertices);
+      for (let func of this._onVerticesChange) {
+        func(this.vertices);
       }
     }, 33);
   }
@@ -51,11 +53,21 @@ export default class Solver {
   }
 
   onVerticesChange(func) {
-    this._onVerticesChange = func;
+    this._onVerticesChange.push(func);
+    return this._onVerticesChange.length - 1;
   }
 
   onStatusChange(func) {
-    this._onStatusChange = func;
+    this._onStatusChange.push(func);
+    return this._onStatusChange.length - 1;
+  }
+
+  removeOnVerticesChange(index) {
+    this._onVerticesChange.splice(index, 1);
+  }
+
+  removeOnStatusChange(index) {
+    this._onStatusChange.splice(index, 1);
   }
 
   _setTimeStep() {
@@ -129,8 +141,8 @@ export default class Solver {
   _setStatus(status) {
     let prevStatus = this.status;
     this.status = status;
-    if (this._onStatusChange) {
-      this._onStatusChange(status, prevStatus);
+    for (let func of this._onStatusChange) {
+      func(status, prevStatus);
     }
   }
 
