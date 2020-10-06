@@ -1,11 +1,17 @@
 import Gui from "../../dynamic-relaxation/gui";
 
-export default function createGui(solver, updateGeometry, hingeOptimizer) {
+export default function createGui(
+  solver,
+  updateGeometry,
+  hingeOptimizer,
+  cuttingLines
+) {
   let gui = new Gui(solver, updateGeometry);
 
   createHingesGui(gui, hingeOptimizer);
   createTargetCurveGui(gui, hingeOptimizer);
   createOptimizerGui(gui, hingeOptimizer);
+  createCuttingLinesGui(gui, cuttingLines, hingeOptimizer);
 }
 
 function createHingesGui(gui, optimizer) {
@@ -37,4 +43,16 @@ function createOptimizerGui(gui, optimizer) {
   let optimizerFolder = gui.addFolder("Optimizer");
   optimizerFolder.add(optimizer, "startOptimization").name("optimize");
   optimizerFolder.add(optimizer, "status").listen();
+}
+
+function createCuttingLinesGui(gui, cuttingLines, optimizer) {
+  let cuttingLinesFolder = gui.addFolder("Cutting Lines");
+  function draw() {
+    cuttingLines.setTorsionConstants(
+      optimizer.hingeGoals.map((goal) => goal.strength)
+    );
+    cuttingLines.draw();
+  }
+  let obj = { draw };
+  cuttingLinesFolder.add(obj, "draw");
 }

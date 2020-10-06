@@ -5,6 +5,7 @@ import createSolver from "./createSolver";
 import createGui from "./createGui";
 import BezierCurve from "./bezierCurve";
 import HingeOptimizer from "./hingeOptimizer";
+import CuttingLines from "./cuttingLines";
 
 export default function main() {
   const container = document.getElementById("viewport");
@@ -15,6 +16,7 @@ export default function main() {
   let updateGeometry = createGeometry(scene, vertices);
   solver.onVerticesChange(updateGeometry);
   solver.startSimulation();
+  const cuttingLines = new CuttingLines(scene);
 
   const curvePoints = [
     [1, 0, 0],
@@ -37,5 +39,5 @@ export default function main() {
     requestAnimationFrame(update);
   }
   update();
-  createGui(solver, updateGeometry, hingeOptimizer);
+  createGui(solver, updateGeometry, hingeOptimizer, cuttingLines);
 }
