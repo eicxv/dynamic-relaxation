@@ -4,7 +4,7 @@ import { AnchorGoal, BarGoal, HingeGoal } from "../../dynamic-relaxation/goals";
 export default function createSolver() {
   let vertices = [];
   let goals = [];
-  let n = 8;
+  let n = 9;
 
   let angle = Math.PI / (n - 1);
   for (let i = 0; i < n; i++) {

@@ -110,32 +110,74 @@ export default class CuttingLines {
       ySign *= -1;
     }
     yOffset += this.ccDistanceBetweenElements;
-    this.vertices.push([
-      this.overallWidth / 2 - this.connectorWidth,
-      yOffset - defaultWidth / 2,
-      0,
-    ]);
-    this.vertices.push([this.overallWidth / 2, yOffset + defaultWidth / 2, 0]);
-    this.vertices.push([0, yOffset + defaultWidth / 2, 0]);
-    this.vertices.push([
-      -this.overallWidth / 2 + this.connectorWidth,
-      yOffset - defaultWidth / 2,
-      0,
-    ]);
-    this.vertices.push([-this.overallWidth / 2, yOffset + defaultWidth / 2, 0]);
-    this.vertices.push([0, yOffset + defaultWidth / 2, 0]);
+    if (this.elementWidths.length % 2 == 0) {
+      this.vertices.push([
+        this.overallWidth / 2 - this.connectorWidth,
+        yOffset - defaultWidth / 2,
+        0,
+      ]);
+      this.vertices.push([
+        this.overallWidth / 2,
+        yOffset + defaultWidth / 2,
+        0,
+      ]);
+      this.vertices.push([0, yOffset + defaultWidth / 2, 0]);
+      this.vertices.push([
+        -this.overallWidth / 2 + this.connectorWidth,
+        yOffset - defaultWidth / 2,
+        0,
+      ]);
+      this.vertices.push([
+        -this.overallWidth / 2,
+        yOffset + defaultWidth / 2,
+        0,
+      ]);
+      this.vertices.push([0, yOffset + defaultWidth / 2, 0]);
+    } else {
+      this.vertices.push([this.connectorWidth, yOffset - defaultWidth / 2, 0]);
+      this.vertices.push([
+        this.overallWidth / 2,
+        yOffset - defaultWidth / 2,
+        0,
+      ]);
+      this.vertices.push([
+        this.overallWidth / 2,
+        yOffset + defaultWidth / 2,
+        0,
+      ]);
+      this.vertices.push([0, yOffset + defaultWidth / 2, 0]);
+      this.vertices.push([-this.connectorWidth, yOffset - defaultWidth / 2, 0]);
+      this.vertices.push([
+        -this.overallWidth / 2,
+        yOffset - defaultWidth / 2,
+        0,
+      ]);
+      this.vertices.push([
+        -this.overallWidth / 2,
+        yOffset + defaultWidth / 2,
+        0,
+      ]);
+      this.vertices.push([0, yOffset + defaultWidth / 2, 0]);
+    }
   }
 
   _createIndices() {
     this.indices = [];
-    for (let i = 0; i < this.vertices.length; i += 12) {
+    let endOffset = this.elementWidths.length % 2 !== 0 ? 8 : 0;
+    for (let i = 0; i < this.vertices.length - endOffset; i += 12) {
       this.indices.push(i + 0, i + 1, i + 1, i + 7, i + 7, i + 8);
       this.indices.push(i + 3, i + 4, i + 4, i + 10, i + 10, i + 11);
       this.indices.push(i + 2, i + 6, i + 6, i + 9, i + 9, i + 5, i + 5, i + 2);
     }
-    for (let i = 0; i < this.vertices.length - 12; i += 12) {
+    for (let i = 0; i < this.vertices.length - 12 - endOffset; i += 12) {
       this.indices.push(i + 8, i + 12);
       this.indices.push(i + 11, i + 15);
+    }
+    if (this.elementWidths.length % 2 !== 0) {
+      let i = this.vertices.length - 8;
+      this.indices.push(i - 4, i, i, i + 1, i + 1, i + 2, i + 2, i + 3);
+      i += 4;
+      this.indices.push(i - 5, i, i, i + 1, i + 1, i + 2, i + 2, i + 3);
     }
   }
 
