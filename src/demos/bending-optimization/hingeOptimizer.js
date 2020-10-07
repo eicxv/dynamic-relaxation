@@ -1,17 +1,25 @@
 import { math, angleBetweenVectors } from "../../dynamic-relaxation/mathjs";
 import { Status } from "../../dynamic-relaxation/solver";
+import { BarGoal, HingeGoal } from "../../dynamic-relaxation/goals";
 
 export default class HingeOptimizer {
-  constructor(solver, hingeGoals, barGoals, targetCurve) {
+  constructor(solver, targetCurve) {
     this.solver = solver;
-    this.hingeGoals = hingeGoals;
-    this.barGoals = barGoals;
+    this.hingeGoals = [];
+    this.barGoals = [];
+    this.goalsUpdated();
     this.targetCurve = targetCurve;
     this.targetCurveUpdated();
     this.step = 1;
     this.angleTolerance = (2 * Math.PI) / 360;
     this.status = "initialized";
-    // this._onConverge = this._onConverge.bind(this);
+  }
+
+  goalsUpdated() {
+    this.hingeGoals = this.solver.goals.filter(
+      (goal) => goal instanceof HingeGoal
+    );
+    this.barGoals = this.solver.goals.filter((goal) => goal instanceof BarGoal);
   }
 
   targetCurveUpdated() {

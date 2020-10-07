@@ -9,12 +9,12 @@ export default class Gui {
     this._updateGeometry = updateGeometry;
     this.status = this._solver.status.description;
 
-    let solverFolder = this._gui.addFolder("Solver");
-    solverFolder.open();
-    this._addRunToggle(solverFolder);
-    this._addResetButton(solverFolder);
-    this._addIterationCount(solverFolder);
-    this._addSolverStatus(solverFolder);
+    this.solverFolder = this._gui.addFolder("Solver");
+    this.solverFolder.open();
+    this._addRunToggle(this.solverFolder);
+    this._addResetButton(this.solverFolder);
+    this._addIterationCount(this.solverFolder);
+    this._addSolverStatus(this.solverFolder);
   }
 
   addFolder(name) {

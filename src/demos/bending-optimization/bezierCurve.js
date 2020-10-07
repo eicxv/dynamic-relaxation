@@ -7,7 +7,7 @@ export default class BezierCurve {
 
     var points = this.curve.getPoints(50);
     var geometry = new THREE.BufferGeometry().setFromPoints(points);
-    var material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    var material = new THREE.LineBasicMaterial({ color: 0x449944 });
     this.sceneObject = new THREE.Line(geometry, material);
     scene.add(this.sceneObject);
   }

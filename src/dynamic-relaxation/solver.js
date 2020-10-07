@@ -129,7 +129,10 @@ export default class Solver {
   }
 
   _checkTermination() {
-    return math.sum(math.abs(this.residuals)) < this.terminationForce;
+    return (
+      math.sum(math.abs(this.residuals)) / this.residuals.length <
+      this.terminationForce
+    );
   }
 
   // _verticesUpdated = throttle(() => {
