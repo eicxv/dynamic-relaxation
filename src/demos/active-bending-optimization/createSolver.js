@@ -52,6 +52,8 @@ function resetSolver(solver, vertices, goals) {
   solver.goals = [];
   solver.velocities = math.zeros(vertices.length, 3).toArray();
   solver.residuals = math.zeros(vertices.length, 3).toArray();
+  solver.temp = math.zeros(vertices.length, 3).toArray();
+  solver.stiffnesses = new Array(vertices.length);
   solver.energy = [0, 0, 0];
   solver.mass = 1;
   solver.status = Status.INITIALIZED;

@@ -5,7 +5,7 @@ export default class Gui {
   constructor(solver, updateGeometry) {
     this._gui = new dat.GUI();
     this._solver = solver;
-    this._startVertices = solver.vertices.slice();
+    this._startVertices = solver.vertices.map((v) => v.slice());
     this._updateGeometry = updateGeometry;
     this.status = this._solver.status.description;
 
@@ -55,7 +55,7 @@ export default class Gui {
   }
 
   reset() {
-    this._solver.vertices = this._startVertices;
+    this._solver.vertices = this._startVertices.map((v) => v.slice());
     this._solver.velocities = this._startVertices.map(() => [0, 0, 0]);
     this._solver.energy.pop();
     this._solver.energy.unshift(0);

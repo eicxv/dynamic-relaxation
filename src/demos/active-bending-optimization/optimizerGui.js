@@ -46,9 +46,8 @@ export default class OptimizerGui {
 
   createOptimizerGui() {
     this.optimizerFolder = this.gui.addFolder("Optimizer");
-    this.optimizerFolder
-      .add(this.optimizer, "startOptimization")
-      .name("optimize");
+    this.optimizerFolder.add(this.optimizer, "startOptimization").name("start");
+    this.optimizerFolder.add(this.optimizer, "stopOptimization").name("stop");
     this.optimizerFolder.add(this.optimizer, "status").listen();
   }
 

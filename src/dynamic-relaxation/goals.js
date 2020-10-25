@@ -1,4 +1,11 @@
-import { math, angleBetweenVectors } from "./mathjs";
+import { angleBetweenVectors } from "./utility";
+import { vec3 } from "gl-matrix";
+
+const temp1 = vec3.create();
+const temp2 = vec3.create();
+const temp3 = vec3.create();
+const temp4 = vec3.create();
+const temp5 = vec3.create();
 
 class BaseGoal {}
 
@@ -6,13 +13,17 @@ export class AnchorGoal extends BaseGoal {
   constructor(vertexIndex, position, strength) {
     super();
     this.vertexIndex = vertexIndex;
-    this.position = position;
+    this.position = vec3.clone(position);
     this.strength = strength;
   }
   calculate(vertices, residuals) {
-    let r = math.subtract(this.position, vertices[this.vertexIndex]);
-    r = math.dotMultiply(r, this.strength);
-    residuals[this.vertexIndex] = math.add(residuals[this.vertexIndex], r);
+    let r = vec3.sub(temp1, this.position, vertices[this.vertexIndex]);
+    vec3.scaleAndAdd(
+      residuals[this.vertexIndex],
+      residuals[this.vertexIndex],
+      r,
+      this.strength
+    );
   }
   addStiffness(stiffnesses) {
     stiffnesses[this.vertexIndex] += this.strength;
@@ -27,8 +38,12 @@ export class ForceGoal extends BaseGoal {
     this.strength = strength;
   }
   calculate(vertices, residuals) {
-    let r = math.dotMultiply(this.force, this.strength);
-    residuals[this.vertexIndex] = math.add(residuals[this.vertexIndex], r);
+    vec3.scaleAndAdd(
+      residuals[this.vertexIndex],
+      residuals[this.vertexIndex],
+      this.force,
+      this.strength
+    );
   }
   addStiffness(stiffnesses) {
     // no stiffness
@@ -45,16 +60,16 @@ export class BarGoal extends BaseGoal {
   }
 
   calculate(vertices, residuals) {
-    let vectorAB = math.subtract(
+    let vectorAB = vec3.sub(
+      temp1,
       vertices[this.vertexIndexB],
       vertices[this.vertexIndexA]
     );
-    let length = math.norm(vectorAB);
+    let length = vec3.len(vectorAB, vectorAB);
     let strain = 1 - this.restLength / length;
-    let r = math.dotMultiply(vectorAB, strain * this.strength);
-    residuals[this.vertexIndexA] = math.add(residuals[this.vertexIndexA], r);
-    r = math.dotMultiply(r, -1);
-    residuals[this.vertexIndexB] = math.add(residuals[this.vertexIndexB], r);
+    let r = vec3.scale(vectorAB, vectorAB, strain * this.strength);
+    vec3.add(residuals[this.vertexIndexA], residuals[this.vertexIndexA], r);
+    vec3.sub(residuals[this.vertexIndexB], residuals[this.vertexIndexB], r);
   }
   addStiffness(stiffnesses) {
     stiffnesses[this.vertexIndexA] += this.strength;
@@ -79,42 +94,52 @@ export class HingeGoal extends BaseGoal {
   }
 
   calculate(vertices, residuals) {
-    let vectorMidA = math.subtract(
+    let vectorMidA = vec3.sub(
+      temp1,
       vertices[this.vertexIndexEndA],
       vertices[this.vertexIndexMid]
     );
-    let vectorMidB = math.subtract(
+    let vectorMidB = vec3.sub(
+      temp2,
       vertices[this.vertexIndexEndB],
       vertices[this.vertexIndexMid]
     );
     let angle = angleBetweenVectors(vectorMidA, vectorMidB);
     let strain = angle - this.restAngle;
-    let perp = math.cross(vectorMidA, vectorMidB);
+    let perp = vec3.cross(temp3, vectorMidA, vectorMidB);
 
-    let forceA = math.cross(vectorMidA, perp);
-    forceA = math.dotMultiply(
+    let forceA = vec3.cross(temp4, vectorMidA, perp);
+    forceA = vec3.scale(
       forceA,
-      (this.strength * strain) / (math.norm(forceA) * math.norm(vectorMidA))
+      forceA,
+      (this.strength * strain) / (vec3.len(forceA) * vec3.len(vectorMidA))
     );
-    let forceB = math.cross(vectorMidB, perp);
-    forceB = math.dotMultiply(
+    let forceB = vec3.cross(temp5, vectorMidB, perp);
+    forceB = vec3.scale(
       forceB,
-      (this.strength * strain) / (math.norm(forceB) * math.norm(vectorMidB))
+      forceB,
+      (this.strength * strain) / (vec3.len(forceB) * vec3.len(vectorMidB))
     );
-
-    residuals[this.vertexIndexEndA] = math.subtract(
+    vec3.sub(
+      residuals[this.vertexIndexEndA],
       residuals[this.vertexIndexEndA],
       forceA
     );
-    residuals[this.vertexIndexEndB] = math.add(
+    vec3.add(
+      residuals[this.vertexIndexEndB],
       residuals[this.vertexIndexEndB],
       forceB
     );
-    residuals[this.vertexIndexMid] = math
-      .chain(residuals[this.vertexIndexMid])
-      .add(forceA)
-      .subtract(forceB)
-      .done();
+    vec3.add(
+      residuals[this.vertexIndexMid],
+      residuals[this.vertexIndexMid],
+      forceA
+    );
+    vec3.sub(
+      residuals[this.vertexIndexMid],
+      residuals[this.vertexIndexMid],
+      forceB
+    );
   }
 
   addStiffness(stiffnesses) {
@@ -134,30 +159,29 @@ export class SoapFilmGoal extends BaseGoal {
   }
 
   _calculateArea(p1, p2, p3) {
-    let p1p2 = math.subtract(p2, p1);
-    let p1p3 = math.subtract(p3, p1);
-    let crossProduct = math.cross(p1p2, p1p3);
-    let area = math.norm(crossProduct) / 2;
+    let p1p2 = vec3.sub(temp1, p2, p1);
+    let p1p3 = vec3.sub(temp2, p3, p1);
+    let crossProduct = vec3.cross(p1p2, p1p2, p1p3);
+    let area = vec3.len(crossProduct) / 2;
     return area;
   }
 
   _applyForce(vertices, residuals, vertexIndexA, vertexIndexB, angle) {
-    let vectorAB = math.subtract(
+    let vectorAB = vec3.sub(
+      temp1,
       vertices[vertexIndexB],
       vertices[vertexIndexA]
     );
-    let length = math.norm(vectorAB);
+    let length = vec3.len(vectorAB);
     let sigma = this.strength;
-    let tension = (sigma * length) / (2 * math.tan(angle));
-    let r = math.dotMultiply(vectorAB, tension / length);
-    residuals[vertexIndexA] = math.add(residuals[vertexIndexA], r);
-    r = math.dotMultiply(r, -1);
-    residuals[vertexIndexB] = math.add(residuals[vertexIndexB], r);
+    let tension = (sigma * length) / (2 * Math.tan(angle));
+    let r = vec3.scale(vectorAB, vectorAB, tension / length);
+    vec3.add(residuals[vertexIndexA], residuals[vertexIndexA], r);
+    vec3.sub(residuals[vertexIndexB], residuals[vertexIndexB], r);
   }
 
   _vectorAngle(a, b) {
-    let angle = math.acos(math.dot(a, b) / (math.norm(a) * math.norm(b)));
-    return angle;
+    return Math.acos(vec3.dot(a, b) / (vec3.len(a) * vec3.len(b)));
   }
 
   calculate(vertices, residuals) {
@@ -165,15 +189,17 @@ export class SoapFilmGoal extends BaseGoal {
     let v1;
     let v2;
 
-    v1 = math.subtract(
+    v1 = vec3.sub(
+      temp1,
       vertices[this.vertexIndexC],
       vertices[this.vertexIndexA]
     );
-    v2 = math.subtract(
+    v2 = vec3.sub(
+      temp2,
       vertices[this.vertexIndexC],
       vertices[this.vertexIndexB]
     );
-    angle = this._vectorAngle(v1, v2);
+    angle = angleBetweenVectors(v1, v2);
 
     this._applyForce(
       vertices,
@@ -182,15 +208,17 @@ export class SoapFilmGoal extends BaseGoal {
       this.vertexIndexB,
       angle
     );
-    v1 = math.subtract(
+    v1 = vec3.sub(
+      temp1,
       vertices[this.vertexIndexA],
       vertices[this.vertexIndexB]
     );
-    v2 = math.subtract(
+    v2 = vec3.sub(
+      temp2,
       vertices[this.vertexIndexA],
       vertices[this.vertexIndexC]
     );
-    angle = this._vectorAngle(v1, v2);
+    angle = angleBetweenVectors(v1, v2);
     this._applyForce(
       vertices,
       residuals,
@@ -198,15 +226,17 @@ export class SoapFilmGoal extends BaseGoal {
       this.vertexIndexC,
       angle
     );
-    v1 = math.subtract(
+    v1 = vec3.sub(
+      temp1,
       vertices[this.vertexIndexB],
       vertices[this.vertexIndexC]
     );
-    v2 = math.subtract(
+    v2 = vec3.sub(
+      temp2,
       vertices[this.vertexIndexB],
       vertices[this.vertexIndexA]
     );
-    angle = this._vectorAngle(v1, v2);
+    angle = angleBetweenVectors(v1, v2);
     this._applyForce(
       vertices,
       residuals,

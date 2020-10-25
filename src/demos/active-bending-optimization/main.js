@@ -32,5 +32,6 @@ export default function main() {
     requestAnimationFrame(update);
   }
   update();
-  new OptimizerGui(solver, hingeOptimizer, cuttingLines, geometry, n);
+  let gui = new OptimizerGui(solver, hingeOptimizer, cuttingLines, geometry, n);
+  hingeOptimizer.gui = gui;
 }

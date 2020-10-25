@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/eicxv/dynamic-relaxation#readme",
   "dependencies": {
+    "gl-matrix": "^3.3.0",
     "lodash.throttle": "^4.1.1",
     "mathjs": "^7.3.0",
     "three": "^0.121.1"

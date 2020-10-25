@@ -67,19 +67,27 @@ export default class HingeOptimizer {
     this._optimize();
   }
 
+  stopOptimization(status = "stopped") {
+    this.status = status;
+    this.solver.removeOnStatusChange(this._onConvergeIdentifier);
+  }
+
   _optimize() {
     let vertices = this.solver.vertices;
     let currAngles = this._getAngles(vertices);
     let diffAngles = math.subtract(currAngles, this.targetAngles);
     if (math.max(diffAngles) < this.angleTolerance) {
-      this.status = "done";
-      this.solver.removeOnStatusChange(this._onConvergeIdentifier);
+      this.stopOptimization("done");
       return;
     }
     for (let i = 0; i < this.hingeGoals.length; i++) {
-      this.hingeGoals[i].strength =
-        this.hingeGoals[i].strength * (1 - this.step * diffAngles[i]);
+      this.hingeGoals[i].strength = Math.max(
+        0.05,
+        this.hingeGoals[i].strength * (1 - this.step * diffAngles[i])
+      );
     }
-    this.solver.resumeSimulation();
+    if (this.gui.gui.run) {
+      this.solver.resumeSimulation();
+    }
   }
 }

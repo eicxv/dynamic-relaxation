@@ -1,5 +1,12 @@
-import { math } from "./mathjs";
+import { vec3 } from "gl-matrix";
 import throttle from "lodash.throttle";
+import {
+  createArray,
+  zeroArray,
+  addArray,
+  scaleArray,
+  scaleAndAddArray,
+} from "./utility";
 
 export const Status = Object.freeze({
   INITIALIZED: Symbol("initialized"),
@@ -14,8 +21,10 @@ export default class Solver {
     this.terminationForce = terminationForce;
     this.dt = 1;
     this.goals = [];
-    this.velocities = math.zeros(vertices.length, 3).toArray();
-    this.residuals = math.zeros(vertices.length, 3).toArray();
+    this.velocities = createArray(vertices.length);
+    this.residuals = createArray(vertices.length);
+    this.temp = createArray(vertices.length);
+    this.stiffnesses = new Array(vertices.length);
     this.energy = [0, 0, 0];
     this.mass = 1;
     this.status = Status.INITIALIZED;
@@ -31,6 +40,7 @@ export default class Solver {
   }
 
   startSimulation() {
+    this.testStamp = performance.now();
     this.iterationCount = 0;
     this.resumeSimulation();
   }
@@ -71,36 +81,40 @@ export default class Solver {
   }
 
   _setTimeStep() {
-    let stiffnesses = math.zeros(this.vertices.length).toArray();
+    this.stiffnesses.fill(0);
     for (let goal of this.goals) {
-      goal.addStiffness(stiffnesses);
+      goal.addStiffness(this.stiffnesses);
     }
-    const stiffness = math.max(stiffnesses);
-    this.dt = math.sqrt(2 / stiffness);
+    const stiffness = Math.max(...this.stiffnesses);
+    this.dt = Math.sqrt(2 / stiffness);
   }
 
   _updateResiduals() {
-    this.residuals = math.zeros(this.vertices.length, 3).toArray();
+    zeroArray(this.residuals);
     for (let goal of this.goals) {
       goal.calculate(this.vertices, this.residuals);
     }
   }
 
   _updateVelocities() {
-    let dv = math.dotMultiply(this.residuals, this.dt);
-    this.velocities = math.add(this.velocities, dv);
+    let dv = scaleArray(this.temp, this.residuals, this.dt);
+    addArray(this.velocities, this.velocities, dv);
   }
 
   _updateVertices() {
-    let dx = math.dotMultiply(this.velocities, this.dt);
-    this.vertices = math.add(this.vertices, dx);
+    let dx = scaleArray(this.temp, this.velocities, this.dt);
+    addArray(this.vertices, this.vertices, dx);
     this._verticesUpdated();
   }
 
   _updateEnergy() {
-    let energy = math.chain(this.velocities).dotPow(2).sum().done();
+    let energy = this.velocities.reduce(this._energyReducer, 0);
     this.energy.pop();
     this.energy.unshift(energy);
+  }
+
+  _energyReducer(acc, vel) {
+    return acc + vec3.sqrLen(vel);
   }
 
   _sincePeak() {
@@ -112,27 +126,32 @@ export default class Solver {
 
   _resetToEnergyPeak() {
     let q = this._sincePeak();
-    this.vertices = math
-      .chain(this.vertices)
-      .subtract(math.dotMultiply(this.velocities, this.dt * (1 + q)))
-      .add(
-        math.dotMultiply(
-          this.residuals,
-          ((math.pow(this.dt, 2) / 2) * q) / this.mass
-        )
-      )
-      .done();
 
-    this.velocities = math.zeros(this.vertices.length, 3).toArray();
+    scaleAndAddArray(
+      this.vertices,
+      this.vertices,
+      this.velocities,
+      -this.dt * (1 + q)
+    );
+    scaleAndAddArray(
+      this.vertices,
+      this.vertices,
+      this.residuals,
+      ((this.dt ** 2 / 2) * q) / this.mass
+    );
+
+    zeroArray(this.velocities);
     this.energy.pop();
     this.energy.unshift(0);
   }
 
   _checkTermination() {
-    return (
-      math.sum(math.abs(this.residuals)) / this.residuals.length <
-      this.terminationForce
-    );
+    let force = this.residuals.reduce(this._terminationReducer, 0);
+    return force < this.terminationForce;
+  }
+
+  _terminationReducer(acc, res) {
+    return acc + vec3.len(res);
   }
 
   // _verticesUpdated = throttle(() => {
@@ -152,6 +171,7 @@ export default class Solver {
   _runIteration() {
     this._updateResiduals();
     if (this._checkTermination()) {
+      console.log(performance.now() - this.testStamp);
       this._setStatus(Status.CONVERGED);
       this._verticesUpdated();
       return;
