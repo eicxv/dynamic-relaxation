@@ -40,7 +40,6 @@ export default class Solver {
   }
 
   startSimulation() {
-    this.testStamp = performance.now();
     this.iterationCount = 0;
     this.resumeSimulation();
   }
@@ -171,7 +170,6 @@ export default class Solver {
   _runIteration() {
     this._updateResiduals();
     if (this._checkTermination()) {
-      console.log(performance.now() - this.testStamp);
       this._setStatus(Status.CONVERGED);
       this._verticesUpdated();
       return;

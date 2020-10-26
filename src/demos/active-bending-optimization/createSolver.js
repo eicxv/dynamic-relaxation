@@ -1,6 +1,6 @@
 import Solver, { Status } from "../../dynamic-relaxation/solver";
 import { AnchorGoal, BarGoal, HingeGoal } from "../../dynamic-relaxation/goals";
-import { math } from "../../dynamic-relaxation/mathjs";
+import { createArray } from "../../dynamic-relaxation/utility";
 
 export default function createSolver(numberOfHinges) {
   const solver = new Solver([], 1e-3);
@@ -50,9 +50,9 @@ function resetSolver(solver, vertices, goals) {
   solver.vertices = vertices;
   solver.dt = 1;
   solver.goals = [];
-  solver.velocities = math.zeros(vertices.length, 3).toArray();
-  solver.residuals = math.zeros(vertices.length, 3).toArray();
-  solver.temp = math.zeros(vertices.length, 3).toArray();
+  solver.velocities = createArray(vertices.length);
+  solver.residuals = createArray(vertices.length);
+  solver.temp = createArray(vertices.length);
   solver.stiffnesses = new Array(vertices.length);
   solver.energy = [0, 0, 0];
   solver.mass = 1;
