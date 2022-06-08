@@ -1,9 +1,9 @@
-import dat from "three/examples/jsm/libs/dat.gui.module";
+import GUI from "lil-gui";
 import { Status } from "./solver";
 
 export default class Gui {
   constructor(solver, updateGeometry) {
-    this._gui = new dat.GUI();
+    this._gui = new GUI();
     this._solver = solver;
     this._startVertices = solver.vertices.map((v) => v.slice());
     this._updateGeometry = updateGeometry;
